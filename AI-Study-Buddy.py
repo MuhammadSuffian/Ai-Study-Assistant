@@ -10,6 +10,18 @@ import io
 import re
 import os
 
+# Configure page settings
+st.set_page_config(
+    page_title="AI STUDY BUDDY",
+    page_icon="🤖",
+    initial_sidebar_state=st.session_state.get('sidebar_state', 'collapsed'),
+    layout="wide"
+)
+
+# Add a native Streamlit sidebar toggle button
+if 'sidebar_state' not in st.session_state:
+    st.session_state.sidebar_state = 'collapsed'
+
 # Add custom sidebar toggle button at the beginning of your app
 st.markdown("""
 <style>
@@ -52,28 +64,51 @@ st.markdown("""
 
 <script>
     function toggleSidebar() {
-        // Find the Streamlit sidebar toggle button
-        const sidebarToggle = document.querySelector('[data-testid="baseButton-headerNoPadding"]');
+        // Try multiple selectors to find the sidebar toggle button
+        const sidebarToggle = 
+            document.querySelector('button[data-testid="baseButton-headerNoPadding"]') ||
+            document.querySelector('button[kind="header"]') ||
+            document.querySelector('button[aria-label="Close sidebar"]') ||
+            document.querySelector('button[aria-label="Open sidebar"]');
+            
         if (sidebarToggle) {
             sidebarToggle.click();
-        }
-        
-        // Update button text based on sidebar state
-        const button = document.getElementById('custom-sidebar-button');
-        if (button) {
-            button.textContent = button.textContent === 'Expand' ? 'Close' : 'Expand';
+            
+            // Update button text based on sidebar state
+            const button = document.getElementById('custom-sidebar-button');
+            if (button) {
+                // Use a small delay to ensure the sidebar state has changed
+                setTimeout(() => {
+                    const isOpen = document.querySelector('.stSidebar').classList.contains('css-1p47ik9');
+                    button.textContent = isOpen ? 'Close' : 'Expand';
+                }, 100);
+            }
         }
     }
     
-    // Ensure the button is added to the DOM and properly positioned
-    document.addEventListener('DOMContentLoaded', function() {
-        // Check if button already exists
+    // Initialize button and ensure it's properly added to the DOM
+    function initSidebarButton() {
         if (!document.getElementById('custom-sidebar-button')) {
             const button = document.createElement('div');
             button.innerHTML = document.querySelector('#custom-sidebar-button').outerHTML;
             document.body.appendChild(button.firstChild);
         }
-    });
+    }
+    
+    // Call initialization when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSidebarButton);
+    } else {
+        initSidebarButton();
+    }
+    
+    // Reinitialize on Streamlit's page update
+    new MutationObserver(function(mutations) {
+        const button = document.getElementById('custom-sidebar-button');
+        if (!button) {
+            initSidebarButton();
+        }
+    }).observe(document.body, {childList: true, subtree: true});
 </script>
 """, unsafe_allow_html=True)
 
@@ -648,28 +683,51 @@ st.markdown("""
 
 <script>
     function toggleSidebar() {
-        // Find the Streamlit sidebar toggle button
-        const sidebarToggle = document.querySelector('[data-testid="baseButton-headerNoPadding"]');
+        // Try multiple selectors to find the sidebar toggle button
+        const sidebarToggle = 
+            document.querySelector('button[data-testid="baseButton-headerNoPadding"]') ||
+            document.querySelector('button[kind="header"]') ||
+            document.querySelector('button[aria-label="Close sidebar"]') ||
+            document.querySelector('button[aria-label="Open sidebar"]');
+            
         if (sidebarToggle) {
             sidebarToggle.click();
-        }
-        
-        // Update button text based on sidebar state
-        const button = document.getElementById('custom-sidebar-button');
-        if (button) {
-            button.textContent = button.textContent === 'Expand' ? 'Close' : 'Expand';
+            
+            // Update button text based on sidebar state
+            const button = document.getElementById('custom-sidebar-button');
+            if (button) {
+                // Use a small delay to ensure the sidebar state has changed
+                setTimeout(() => {
+                    const isOpen = document.querySelector('.stSidebar').classList.contains('css-1p47ik9');
+                    button.textContent = isOpen ? 'Close' : 'Expand';
+                }, 100);
+            }
         }
     }
     
-    // Ensure the button is added to the DOM and properly positioned
-    document.addEventListener('DOMContentLoaded', function() {
-        // Check if button already exists
+    // Initialize button and ensure it's properly added to the DOM
+    function initSidebarButton() {
         if (!document.getElementById('custom-sidebar-button')) {
             const button = document.createElement('div');
             button.innerHTML = document.querySelector('#custom-sidebar-button').outerHTML;
             document.body.appendChild(button.firstChild);
         }
-    });
+    }
+    
+    // Call initialization when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSidebarButton);
+    } else {
+        initSidebarButton();
+    }
+    
+    // Reinitialize on Streamlit's page update
+    new MutationObserver(function(mutations) {
+        const button = document.getElementById('custom-sidebar-button');
+        if (!button) {
+            initSidebarButton();
+        }
+    }).observe(document.body, {childList: true, subtree: true});
 </script>
 """, unsafe_allow_html=True)
 
