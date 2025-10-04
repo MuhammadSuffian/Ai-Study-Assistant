@@ -19,11 +19,10 @@ st.markdown("""
         top: 1rem;
         left: 1rem;
         z-index: 99999;
-        background: #000000;
+        background: #FF4B4B;
         color: white;
         border: none;
-        border-radius: 50%;
-        width: 40px;
+        width: 80px;
         height: 40px;
         cursor: pointer;
         display: flex;
@@ -31,20 +30,19 @@ st.markdown("""
         justify-content: center;
         box-shadow: 0 2px 6px rgba(0,0,0,0.25);
         transition: transform 0.2s;
+        font-family: sans-serif;
+        font-weight: bold;
+        font-size: 14px;
+        text-transform: uppercase;
     }
     #custom-sidebar-button:hover {
-        transform: scale(1.1);
-    }
-    #custom-sidebar-button svg {
-        width: 24px;
-        height: 24px;
+        transform: scale(1.05);
+        background: #FF3333;
     }
 </style>
 
 <div id="custom-sidebar-button" onclick="toggleSidebar()">
-    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-        <path d="M3 12h18M3 6h18M3 18h18"/>
-    </svg>
+    Expand
 </div>
 
 <script>
@@ -53,6 +51,12 @@ st.markdown("""
         const sidebarToggle = document.querySelector('[data-testid="baseButton-headerNoPadding"]');
         if (sidebarToggle) {
             sidebarToggle.click();
+        }
+        
+        // Update button text based on sidebar state
+        const button = document.getElementById('custom-sidebar-button');
+        if (button) {
+            button.textContent = button.textContent === 'Expand' ? 'Close' : 'Expand';
         }
     }
     
