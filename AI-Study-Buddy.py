@@ -32,6 +32,7 @@ groq_client = Groq(api_key=groq_api_key)
 st.set_page_config(
     page_title="AI STUDY BUDDY",
     page_icon="🤖",
+    InitialSideBarState = "expanded",
 )
 # Force light theme visuals (overrides Streamlit dark theme selectors).
 st.markdown("""
