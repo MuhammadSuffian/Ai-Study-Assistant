@@ -16,7 +16,7 @@ import os
 # Preferred: st.secrets['auth_token'] (set via `streamlit secrets`), fallback to GROQ_API_KEY env var.
 groq_api_key = None
 try:
-    groq_api_key = st.secrets.get("auth_token") if hasattr(st, "secrets") else None
+    groq_api_key = st.secrets.get("auth_key") if hasattr(st, "secrets") else None
 except Exception:
     groq_api_key = None
 
@@ -24,7 +24,7 @@ if not groq_api_key:
     groq_api_key = os.environ.get("GROQ_API_KEY")
 
 if not groq_api_key:
-    st.error("Groq API key not found. Please set `st.secrets['auth_token']` or the GROQ_API_KEY environment variable.")
+    st.error("Groq API key not found. Please set `st.secrets['auth_key']` or the GROQ_API_KEY environment variable.")
     st.stop()
 
 groq_client = Groq(api_key=groq_api_key)
