@@ -48,11 +48,7 @@ st.markdown("""
         color: #31333F !important;
         border-color: #e0e0e0 !important;
     }
-    /* Sidebar and containers */
-    .css-1d391kg, .css-1v3fvcr, .stSidebar, .stApp, .main {
-        background-color: #FFFFFF !important;
-        color: #31333F !important;
-    }
+  
     /* Ensure message bubbles stay light */
     .user-message, .ai-message, .chat-container, .chat-input-container {
         background-color: inherit !important;
@@ -76,32 +72,7 @@ st.markdown("""
 
 # Make sidebar expand/collapse button more visible (black circle with white icon)
 # Note: keep this at top-level so it's not indented inside another block
-st.markdown("""
-<style>
-    /* Target the floating sidebar toggle - Streamlit renders it with role=button and title attribute */
-    button[title="Expand"] , button[title="Collapse"], button[aria-label="Expand Sidebar"], button[aria-label="Collapse Sidebar"] {
-        background: #000000 !important;
-        color: #ffffff !important;
-        border-radius: 999px !important;
-        width: 40px !important;
-        height: 40px !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.25) !important;
-        border: 2px solid rgba(255,255,255,0.08) !important;
-        transition: transform 0.12s ease-in-out !important;
-    }
-    button[title="Expand"]:hover, button[title="Collapse"]:hover, button[aria-label="Expand Sidebar"]:hover, button[aria-label="Collapse Sidebar"]:hover {
-        transform: translateY(-2px) !important;
-    }
-    /* Ensure the chevron/icon inside stays white */
-    button[title="Expand"] svg, button[title="Collapse"] svg, button[aria-label="Expand Sidebar"] svg, button[aria-label="Collapse Sidebar"] svg {
-        fill: #ffffff !important;
-        color: #ffffff !important;
-    }
-</style>
-""", unsafe_allow_html=True)
+
 
 # Additional fallback selectors and position fix for Streamlit versions where the button uses different attributes
 
