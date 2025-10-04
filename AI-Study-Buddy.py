@@ -522,98 +522,30 @@ if "chat_history" not in st.session_state:
 # Query UI (enabled once an index exists)
 vectorstore_ready = st.session_state.get("vectorstore") is not None
 
-# Main chat area
-st.markdown('<div class="chat-main">', unsafe_allow_html=True)
+# Sidebar toggle (fallback) control
+if "show_fallback_sidebar" not in st.session_state:
+    st.session_state["show_fallback_sidebar"] = False
 
-# Chat container
-with st.container():
-    st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-    
-    # Display chat history
-    if st.session_state.chat_history:
-        for message in st.session_state.chat_history:
-            if message["role"] == "user":
-                st.markdown(f'<div class="user-message">{message["content"]}</div>', unsafe_allow_html=True)
-            else:
-                st.markdown(f'<div class="ai-message">{message["content"]}</div>', unsafe_allow_html=True)
-    else:
-        # Welcome message
-        st.markdown(f'<div class="ai-message">👋 Hi! I\'m your AI Study Assistant. Upload some documents in the sidebar and start asking questions!</div>', unsafe_allow_html=True)
-    
-    st.markdown('</div>', unsafe_allow_html=True)
+if st.button("Toggle sidebar (fallback)", key="toggle_fallback"):
+    st.session_state["show_fallback_sidebar"] = not st.session_state["show_fallback_sidebar"]
+    st.experimental_rerun()
 
-# Auto-scroll to bottom script
-st.markdown("""
-<script>
-    setTimeout(function() {
-        var chatContainer = parent.document.querySelector('.chat-container');
-        if (chatContainer) {
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-    }, 100);
-</script>
-""", unsafe_allow_html=True)
-
-# Input area
-st.markdown('<div class="chat-input-container">', unsafe_allow_html=True)
-st.markdown('<div class="fixed-bottom-input">', unsafe_allow_html=True)
-col1, col2 = st.columns([5, 1], gap="small")
-
-with col1:
-    query = st.text_input(
-        "Type your message...",
-        value="",
-        disabled=not vectorstore_ready,
-        placeholder="Ask anything about your documents...",
-        label_visibility="collapsed",
-        key="chat_input"
-    )
-
-with col2:
-    send_clicked = st.button("Send", disabled=not vectorstore_ready or not query.strip(), key="send_chat")
-
-st.markdown('</div>', unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
-
-# Close main chat area
-st.markdown('</div>', unsafe_allow_html=True)
-
-# Process query when send button is clicked or Enter is pressed
-if send_clicked and query.strip() and vectorstore_ready:
-    # Add user message to chat history
-    st.session_state.chat_history.append({"role": "user", "content": query})
-    
-    with st.spinner("Thinking..."):
-        try:
-            retrieved_docs = st.session_state["vectorstore"].similarity_search(query, k=3)
-            if not retrieved_docs:
-                answer = "I couldn't find relevant information in the uploaded documents. Please try rephrasing your question."
-            else:
-                context = "\n".join([d.page_content for d in retrieved_docs])
-                prompt = f"""Instruction: Provide only the final answer. Do not include chain-of-thought, hidden reasoning, or <think> blocks.
-                Answer the question using only the context below:
-                Context: {context}
-                Question: {query}
-                """
-
-                response = groq_client.chat.completions.create(
-                    model="openai/gpt-oss-120b",
-                    messages=[{"role": "user", "content": prompt}]
-                )
-
-                answer = response.choices[0].message.content
-                answer = hide_thinking(answer)
-            
-            # Add AI response to chat history
-            st.session_state.chat_history.append({"role": "assistant", "content": answer})
-            
-            # Clear the input and rerun to show new messages
-            st.rerun()
-            
-        except Exception as e:
-            error_message = f"Sorry, I encountered an error: {str(e)}"
-            st.session_state.chat_history.append({"role": "assistant", "content": error_message})
-            st.rerun()
+# If fallback sidebar is enabled, render a two-column layout with a left sidebar
+if st.session_state.get("show_fallback_sidebar"):
+    left_col, main_col = st.columns([1, 4])
+    with left_col:
+        render_sidebar(st)
+    with main_col:
+        render_chat(st)
+else:
+    # Render chat in the main area and the real Streamlit sidebar separately
+    render_chat(st)
+    # Populate the native sidebar as well (if visible)
+    try:
+        render_sidebar(st.sidebar)
+    except Exception:
+        # If rendering into native sidebar fails, keep going — user can toggle fallback
+        pass
 
 # Sidebar 
 with st.sidebar:
