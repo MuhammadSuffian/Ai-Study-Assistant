@@ -538,3 +538,54 @@ with st.sidebar:
     3. **Ask** questions using the query box
     4. **Click** the 🚀 Send button or press Enter
     """)
+
+# Add custom sidebar toggle button
+st.markdown("""
+<style>
+    /* Custom sidebar toggle button */
+    .custom-sidebar-button {
+        position: fixed;
+        top: 0.5rem;
+        left: 0.5rem;
+        z-index: 999;
+        background: #000000;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+        transition: transform 0.2s;
+    }
+    .custom-sidebar-button:hover {
+        transform: scale(1.1);
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Add button with JavaScript to toggle sidebar
+st.markdown("""
+<button class="custom-sidebar-button" onclick="toggleSidebar()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 12h18M3 6h18M3 18h18"></path>
+    </svg>
+</button>
+
+<script>
+    function toggleSidebar() {
+        const sidebarToggle = document.querySelector('button[data-testid="baseButton-headerNoPadding"]');
+        if (sidebarToggle) {
+            sidebarToggle.click();
+        }
+    }
+</script>
+""", unsafe_allow_html=True)
+
+# Continue with the rest of your app...
+st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
