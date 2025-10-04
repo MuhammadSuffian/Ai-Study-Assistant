@@ -32,7 +32,7 @@ groq_client = Groq(api_key=groq_api_key)
 st.set_page_config(
     page_title="AI STUDY BUDDY",
     page_icon="🤖",
-    initial_sidebar_state="expanded"  # "expanded" keeps it open
+    InitialSideBarState = "expanded",
 )
 # Force light theme visuals (overrides Streamlit dark theme selectors).
 st.markdown("""
@@ -346,106 +346,6 @@ st.markdown("""
 st.markdown('<div class="app-header">', unsafe_allow_html=True)
 st.title("AI STUDY BUDDY")
 st.markdown('</div>', unsafe_allow_html=True)
-
-# Floating fallback sidebar toggle button (always visible)
-st.markdown("""
-<style>
-    #floating-sidebar-toggle {
-        position: fixed;
-        top: 16px;
-        left: 16px;
-        width: 48px;
-        height: 48px;
-        background: #000000;
-        color: #fff;
-        border-radius: 999px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 100000;
-        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
-        cursor: pointer;
-    }
-    #floating-sidebar-toggle svg { width: 20px; height: 20px; fill: #fff; }
-</style>
-<div id="floating-sidebar-toggle" title="Toggle sidebar" role="button" tabindex="0" aria-label="Toggle sidebar">
-    <!-- simple hamburger icon -->
-    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3 6h18v2H3zM3 11h18v2H3zM3 16h18v2H3z"/></svg>
-</div>
-<script>
-    (function(){
-        const btn = document.getElementById('floating-sidebar-toggle');
-
-        // helper: try to click a node and flash the button on success
-        function clickNode(node){
-            try{
-                node.click();
-                // flash success
-                btn.style.background = '#1a8cff';
-                setTimeout(()=> btn.style.background = '#000', 220);
-                return true;
-            }catch(e){ return false; }
-        }
-
-        function scanAndClick(){
-            // 1) scan attribute-based selectors
-            const attrSelectors = [
-                '[data-testid="collapsedSidebarToggle"]',
-                '[data-testid="sidebarToggle"]',
-                '[data-testid^="sidebar"]',
-                'button[aria-label*="sidebar" i]',
-                'button[title*="Sidebar" i]',
-                'button[title="Expand"]',
-                'button[title="Collapse"]'
-            ];
-            for(const sel of attrSelectors){
-                const el = document.querySelector(sel);
-                if(el && clickNode(el)) return true;
-            }
-
-            // 2) scan all buttons for likely icon-only toggles (look for svg child or small size)
-            const buttons = Array.from(document.getElementsByTagName('button'));
-            for(const b of buttons){
-                const aria = (b.getAttribute('aria-label')||'').toLowerCase();
-                const title = (b.getAttribute('title')||'').toLowerCase();
-                if(aria.includes('sidebar') || title.includes('sidebar') || b.querySelector('svg')){
-                    if(clickNode(b)) return true;
-                }
-            }
-
-            // 3) try clicking parent nodes of svgs that look like toggles
-            const svgs = Array.from(document.getElementsByTagName('svg'));
-            for(const s of svgs){
-                const p = s.closest('button') || s.parentElement;
-                if(p && clickNode(p)) return true;
-            }
-
-            // 4) fallback: toggle sidebar element's display
-            const sidebar = document.querySelector('[data-testid="stSidebar"]') || document.querySelector('.css-1d391kg') || document.querySelector('aside');
-            if(sidebar){
-                sidebar.style.display = (sidebar.style.display === 'none') ? '' : 'none';
-                btn.style.background = '#1a8cff';
-                setTimeout(()=> btn.style.background = '#000', 220);
-                return true;
-            }
-
-            return false;
-        }
-
-        function tryToggle(){
-            // attempt multiple times with short delays to catch dynamically inserted toggles
-            const attempts = 6;
-            let i = 0;
-            const t = setInterval(()=>{
-                if(scanAndClick() || ++i >= attempts){ clearInterval(t); }
-            }, 180);
-        }
-
-        btn.addEventListener('click', tryToggle);
-        btn.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tryToggle(); } });
-    })();
-</script>
-""", unsafe_allow_html=True)
 
 # App state
 if "vectorstore" not in st.session_state:
