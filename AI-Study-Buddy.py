@@ -16,7 +16,7 @@ import os
 # Preferred: st.secrets['auth_token'] (set via `streamlit secrets`), fallback to GROQ_API_KEY env var.
 groq_api_key = None
 try:
-    groq_api_key = st.secrets.get("auth_key") if hasattr(st, "secrets") else None
+    groq_api_key = st.secrets.get("auth_token") if hasattr(st, "secrets") else None
 except Exception:
     groq_api_key = None
 
@@ -24,7 +24,7 @@ if not groq_api_key:
     groq_api_key = os.environ.get("GROQ_API_KEY")
 
 if not groq_api_key:
-    st.error("Groq API key not found. Please set `st.secrets['auth_key']` or the GROQ_API_KEY environment variable.")
+    st.error("Groq API key not found. Please set `st.secrets['auth_token']` or the GROQ_API_KEY environment variable.")
     st.stop()
 
 groq_client = Groq(api_key=groq_api_key)
@@ -33,6 +33,45 @@ st.set_page_config(
     page_title="AI STUDY BUDDY",
     page_icon="🤖",
 )
+# Force light theme visuals (overrides Streamlit dark theme selectors).
+st.markdown("""
+<style>
+    /* Make backgrounds and text use light-theme colors */
+    html, body, .stApp, .main, .block-container, .css-1outpf7, .css-1d391kg, .stSidebar {
+        background-color: #FFFFFF !important;
+        color: #31333F !important;
+    }
+    /* Inputs and buttons */
+    .stTextInput>div>div>input, .stButton>button, textarea {
+        background-color: #f8f9fa !important;
+        color: #31333F !important;
+        border-color: #e0e0e0 !important;
+    }
+    /* Sidebar and containers */
+    .css-1d391kg, .css-1v3fvcr, .stSidebar, .stApp, .main {
+        background-color: #FFFFFF !important;
+        color: #31333F !important;
+    }
+    /* Ensure message bubbles stay light */
+    .user-message, .ai-message, .chat-container, .chat-input-container {
+        background-color: inherit !important;
+        color: inherit !important;
+    }
+    /* Hide Streamlit header/settings that might allow theme changes */
+    .stApp > header, [data-testid="stToolbar"] { display: none !important; }
+</style>
+<script>
+    // Encourage Streamlit to keep the global theme as light in localStorage (best-effort)
+    try {
+        if (window && window.localStorage) {
+            var current = window.localStorage.getItem('globalTheme');
+            try {
+                window.localStorage.setItem('globalTheme', JSON.stringify({base:'light'}));
+            } catch(e) {}
+        }
+    } catch(e) {}
+</script>
+""", unsafe_allow_html=True)
 # Remove hidden reasoning from model outputs
 THINK_TAG_RE = re.compile(r"<think>[\s\S]*?</think>", re.IGNORECASE)
 
