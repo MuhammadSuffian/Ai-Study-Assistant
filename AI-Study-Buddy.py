@@ -397,35 +397,72 @@ st.markdown("""
 <script>
     (function(){
         const btn = document.getElementById('floating-sidebar-toggle');
-        function tryToggle(){
-            // common sidebar toggle candidates
-            const selectors = [
+
+        // helper: try to click a node and flash the button on success
+        function clickNode(node){
+            try{
+                node.click();
+                // flash success
+                btn.style.background = '#1a8cff';
+                setTimeout(()=> btn.style.background = '#000', 220);
+                return true;
+            }catch(e){ return false; }
+        }
+
+        function scanAndClick(){
+            // 1) scan attribute-based selectors
+            const attrSelectors = [
                 '[data-testid="collapsedSidebarToggle"]',
                 '[data-testid="sidebarToggle"]',
+                '[data-testid^="sidebar"]',
                 'button[aria-label*="sidebar" i]',
                 'button[title*="Sidebar" i]',
                 'button[title="Expand"]',
                 'button[title="Collapse"]'
             ];
-            for(const sel of selectors){
+            for(const sel of attrSelectors){
                 const el = document.querySelector(sel);
-                if(el){ el.click(); return; }
+                if(el && clickNode(el)) return true;
             }
-            // fallback: toggle the 'collapsed' attribute on the main sidebar element
-            const sidebar = document.querySelector('[data-testid="stSidebar"]') || document.querySelector('.css-1d391kg');
-            if(sidebar){
-                // If Streamlit uses a class to hide, toggle a style to show/hide
-                if(sidebar.style.display === 'none'){
-                    sidebar.style.display = '';
-                } else {
-                    sidebar.style.display = 'none';
+
+            // 2) scan all buttons for likely icon-only toggles (look for svg child or small size)
+            const buttons = Array.from(document.getElementsByTagName('button'));
+            for(const b of buttons){
+                const aria = (b.getAttribute('aria-label')||'').toLowerCase();
+                const title = (b.getAttribute('title')||'').toLowerCase();
+                if(aria.includes('sidebar') || title.includes('sidebar') || b.querySelector('svg')){
+                    if(clickNode(b)) return true;
                 }
-                return;
             }
-            // last resort: dispatch a keyboard event to open settings (some versions respond to Alt+S)
-            const evt = new KeyboardEvent('keydown', {key: 's', altKey:true});
-            document.dispatchEvent(evt);
+
+            // 3) try clicking parent nodes of svgs that look like toggles
+            const svgs = Array.from(document.getElementsByTagName('svg'));
+            for(const s of svgs){
+                const p = s.closest('button') || s.parentElement;
+                if(p && clickNode(p)) return true;
+            }
+
+            // 4) fallback: toggle sidebar element's display
+            const sidebar = document.querySelector('[data-testid="stSidebar"]') || document.querySelector('.css-1d391kg') || document.querySelector('aside');
+            if(sidebar){
+                sidebar.style.display = (sidebar.style.display === 'none') ? '' : 'none';
+                btn.style.background = '#1a8cff';
+                setTimeout(()=> btn.style.background = '#000', 220);
+                return true;
+            }
+
+            return false;
         }
+
+        function tryToggle(){
+            // attempt multiple times with short delays to catch dynamically inserted toggles
+            const attempts = 6;
+            let i = 0;
+            const t = setInterval(()=>{
+                if(scanAndClick() || ++i >= attempts){ clearInterval(t); }
+            }, 180);
+        }
+
         btn.addEventListener('click', tryToggle);
         btn.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tryToggle(); } });
     })();
