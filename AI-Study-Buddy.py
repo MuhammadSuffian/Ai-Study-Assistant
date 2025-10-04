@@ -520,7 +520,7 @@ with st.sidebar:
     # Index Status Section
     st.markdown("### 📊 **Index Status**")
     if vectorstore_ready:
-        st.markdown(f
+        st.markdown(
             f'<div class="status-ready">✅ Ready: {st.session_state["num_docs"]} docs / {st.session_state["num_chunks"]} chunks</div>', 
             unsafe_allow_html=True
         )
@@ -539,15 +539,15 @@ with st.sidebar:
     4. **Click** the 🚀 Send button or press Enter
     """)
 
-# Add custom sidebar toggle button
+# Add custom sidebar toggle button at the beginning of your app
 st.markdown("""
 <style>
     /* Custom sidebar toggle button */
-    .custom-sidebar-button {
+    #custom-sidebar-button {
         position: fixed;
-        top: 0.5rem;
-        left: 0.5rem;
-        z-index: 999;
+        top: 1rem;
+        left: 1rem;
+        z-index: 99999;
         background: #000000;
         color: white;
         border: none;
@@ -561,10 +561,40 @@ st.markdown("""
         box-shadow: 0 2px 6px rgba(0,0,0,0.25);
         transition: transform 0.2s;
     }
-    .custom-sidebar-button:hover {
+    #custom-sidebar-button:hover {
         transform: scale(1.1);
     }
+    #custom-sidebar-button svg {
+        width: 24px;
+        height: 24px;
+    }
 </style>
+
+<div id="custom-sidebar-button" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+        <path d="M3 12h18M3 6h18M3 18h18"/>
+    </svg>
+</div>
+
+<script>
+    function toggleSidebar() {
+        // Find the Streamlit sidebar toggle button
+        const sidebarToggle = document.querySelector('[data-testid="baseButton-headerNoPadding"]');
+        if (sidebarToggle) {
+            sidebarToggle.click();
+        }
+    }
+    
+    // Ensure the button is added to the DOM
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if button already exists
+        if (!document.getElementById('custom-sidebar-button')) {
+            const button = document.createElement('div');
+            button.innerHTML = document.querySelector('#custom-sidebar-button').outerHTML;
+            document.body.appendChild(button.firstChild);
+        }
+    });
+</script>
 """, unsafe_allow_html=True)
 
 # Add button with JavaScript to toggle sidebar
