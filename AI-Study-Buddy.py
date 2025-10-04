@@ -8,9 +8,67 @@ from groq import Groq
 import PyPDF2
 import io
 import re
+import os
+
+# Add custom sidebar toggle button at the beginning of your app
+st.markdown("""
+<style>
+    /* Custom sidebar toggle button */
+    #custom-sidebar-button {
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 99999;
+        background: #000000;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+        transition: transform 0.2s;
+    }
+    #custom-sidebar-button:hover {
+        transform: scale(1.1);
+    }
+    #custom-sidebar-button svg {
+        width: 24px;
+        height: 24px;
+    }
+</style>
+
+<div id="custom-sidebar-button" onclick="toggleSidebar()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+        <path d="M3 12h18M3 6h18M3 18h18"/>
+    </svg>
+</div>
+
+<script>
+    function toggleSidebar() {
+        // Find the Streamlit sidebar toggle button
+        const sidebarToggle = document.querySelector('[data-testid="baseButton-headerNoPadding"]');
+        if (sidebarToggle) {
+            sidebarToggle.click();
+        }
+    }
+    
+    // Ensure the button is added to the DOM
+    document.addEventListener('DOMContentLoaded', function() {
+        // Check if button already exists
+        if (!document.getElementById('custom-sidebar-button')) {
+            const button = document.createElement('div');
+            button.innerHTML = document.querySelector('#custom-sidebar-button').outerHTML;
+            document.body.appendChild(button.firstChild);
+        }
+    });
+</script>
+""", unsafe_allow_html=True)
 
 # Initialize Groq client with environment variable
-import os
 
 # Load Groq API key securely from Streamlit secrets or environment variable.
 # Preferred: st.secrets['auth_token'] (set via `streamlit secrets`), fallback to GROQ_API_KEY env var.
