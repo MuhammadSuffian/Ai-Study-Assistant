@@ -107,8 +107,8 @@ st.markdown("""
 <style>
     /* Try attribute selectors, role, data-testid and direct button containers */
     [data-testid="collapsedSidebarToggle"] , [data-testid="stToolbar"] button, [data-testid="sidebarToggle"], button[aria-label*="sidebar" i], button[title*="Sidebar" i], button[role="button"] {
-        background: #000000 !important;
-        color: #ffffff !important;
+        background: #331717 !important;
+        color: #DA1C1C !important;
         border-radius: 999px !important;
         width: 44px !important;
         height: 44px !important;
