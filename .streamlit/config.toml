@@ -10,4 +10,4 @@ font = "sans serif"
 gatherUsageStats = false
 
 [ui]
-hideSidebarNav = true
+hideSidebarNav = false
