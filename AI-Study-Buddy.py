@@ -520,7 +520,7 @@ with st.sidebar:
     # Index Status Section
     st.markdown("### 📊 **Index Status**")
     if vectorstore_ready:
-        st.markdown(
+        st.markdown(f
             f'<div class="status-ready">✅ Ready: {st.session_state["num_docs"]} docs / {st.session_state["num_chunks"]} chunks</div>', 
             unsafe_allow_html=True
         )
