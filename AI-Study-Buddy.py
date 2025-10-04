@@ -119,6 +119,166 @@ def hide_thinking(text: str) -> str:
     lines = [ln for ln in text.splitlines() if not ln.strip().lower().startswith(drop_prefixes)]
     return "\n".join(lines).strip()
 
+
+def render_sidebar(container):
+    # Sidebar contents (can render into st.sidebar or into a column container)
+    container.markdown("### 📁 **Upload Documents**")
+    uploaded_files = container.file_uploader("Upload documents", type=["txt", "pdf"], accept_multiple_files=True, label_visibility="collapsed")
+
+    if uploaded_files:
+        container.info("Files selected. Click 'Process documents' to build the index.")
+        if container.button("Process documents", key="process_docs"):
+            with container.spinner("Processing and indexing documents..."):
+                try:
+                    docs = []
+                    for file in uploaded_files:
+                        if file.type == "text/plain":
+                            text = file.read().decode("utf-8", errors="ignore")
+                        elif file.type == "application/pdf":
+                            pdf_reader = PyPDF2.PdfReader(io.BytesIO(file.read()))
+                            text = ""
+                            for page in pdf_reader.pages:
+                                page_text = page.extract_text() or ""
+                                text += page_text + "\n"
+                        else:
+                            container.error(f"Unsupported file type: {file.type}")
+                            continue
+
+                        text = (text or "").strip()
+                        if not text:
+                            container.warning(f"No extractable text in {file.name}; skipping.")
+                            continue
+
+                        docs.append(Document(page_content=text, metadata={"filename": file.name}))
+
+                    if not docs:
+                        container.error("No valid documents to index.")
+                    else:
+                        splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
+                        chunks = splitter.split_documents(docs)
+
+                        if not chunks:
+                            container.error("Documents produced zero chunks; try different files.")
+                        else:
+                            embeddings = HuggingFaceEmbeddings(model_name="sentence-transformers/all-MiniLM-L6-v2")
+                            st.session_state["vectorstore"] = FAISS.from_documents(chunks, embeddings)
+                            st.session_state["num_docs"] = len(docs)
+                            st.session_state["num_chunks"] = len(chunks)
+                            container.success(f"✅ Indexed {len(docs)} documents into {len(chunks)} chunks.")
+                            st.experimental_rerun()
+                except Exception as e:
+                    container.error(f"Indexing failed: {e}")
+
+    container.markdown("---")
+
+    # Chat controls
+    container.markdown("### 💬 **Chat Controls**")
+    if container.button("🗑️ Clear Chat History", key="clear_chat_sidebar"):
+        st.session_state.chat_history = []
+        st.experimental_rerun()
+
+    container.markdown("---")
+
+    # Index Status
+    container.markdown("### 📊 **Index Status**")
+    if st.session_state.get("vectorstore") is not None:
+        container.markdown(f'<div class="status-ready">✅ Ready: {st.session_state["num_docs"]} docs / {st.session_state["num_chunks"]} chunks</div>', unsafe_allow_html=True)
+    else:
+        container.markdown('<div class="status-waiting">⏳ No index yet. Upload files and click Process.</div>', unsafe_allow_html=True)
+
+    container.markdown("---")
+    container.markdown("### 🔧 **How to Use**")
+    container.markdown("""
+    1. **Upload** your documents (TXT or PDF)
+    2. **Process** them to create the index
+    3. **Ask** questions using the query box
+    4. **Click** the 🚀 Send button or press Enter
+    """)
+
+
+def render_chat(container):
+    # Chat UI rendered inside provided container (can be main area or right column)
+    container.markdown('<div class="chat-main">', unsafe_allow_html=True)
+
+    with container:
+        container.markdown('<div class="chat-container">', unsafe_allow_html=True)
+        if st.session_state.chat_history:
+            for message in st.session_state.chat_history:
+                if message["role"] == "user":
+                    container.markdown(f'<div class="user-message">{message["content"]}</div>', unsafe_allow_html=True)
+                else:
+                    container.markdown(f'<div class="ai-message">{message["content"]}</div>', unsafe_allow_html=True)
+        else:
+            container.markdown(f'<div class="ai-message">👋 Hi! I\'m your AI Study Assistant. Upload some documents in the sidebar and start asking questions!</div>', unsafe_allow_html=True)
+        container.markdown('</div>', unsafe_allow_html=True)
+
+    # Auto-scroll and input remain in main container scope
+    container.markdown("""
+    <script>
+        setTimeout(function() {
+            var chatContainer = parent.document.querySelector('.chat-container');
+            if (chatContainer) {
+                chatContainer.scrollTop = chatContainer.scrollHeight;
+            }
+        }, 100);
+    </script>
+    """, unsafe_allow_html=True)
+
+    # Input area
+    container.markdown('<div class="chat-input-container">', unsafe_allow_html=True)
+    container.markdown('<div class="fixed-bottom-input">', unsafe_allow_html=True)
+    col1, col2 = container.columns([5, 1], gap="small")
+
+    with col1:
+        query = container.text_input(
+            "Type your message...",
+            value="",
+            disabled=not st.session_state.get('vectorstore'),
+            placeholder="Ask anything about your documents...",
+            label_visibility="collapsed",
+            key="chat_input_main"
+        )
+
+    with col2:
+        send_clicked = container.button("Send", disabled=not st.session_state.get('vectorstore') or not (query and query.strip()), key="send_chat_main")
+
+    container.markdown('</div>', unsafe_allow_html=True)
+    container.markdown('</div>', unsafe_allow_html=True)
+
+    # Process query
+    if st.session_state.get('vectorstore') and 'send_chat_main' in st.session_state and st.session_state.get('send_chat_main'):
+        q = st.session_state.get('chat_input_main', '')
+        if q and q.strip():
+            st.session_state.chat_history.append({"role": "user", "content": q})
+            with st.spinner("Thinking..."):
+                try:
+                    retrieved_docs = st.session_state["vectorstore"].similarity_search(q, k=3)
+                    if not retrieved_docs:
+                        answer = "I couldn't find relevant information in the uploaded documents. Please try rephrasing your question."
+                    else:
+                        context = "\n".join([d.page_content for d in retrieved_docs])
+                        prompt = f"""Instruction: Provide only the final answer. Do not include chain-of-thought, hidden reasoning, or <think> blocks.
+                        Answer the question using only the context below:
+                        Context: {context}
+                        Question: {q}
+                        """
+
+                        response = groq_client.chat.completions.create(
+                            model="openai/gpt-oss-120b",
+                            messages=[{"role": "user", "content": prompt}]
+                        )
+
+                        answer = response.choices[0].message.content
+                        answer = hide_thinking(answer)
+
+                    st.session_state.chat_history.append({"role": "assistant", "content": answer})
+                    # clear input
+                    st.session_state['chat_input_main'] = ''
+                    st.experimental_rerun()
+                except Exception as e:
+                    st.session_state.chat_history.append({"role": "assistant", "content": f"Sorry, I encountered an error: {e}"})
+                    st.experimental_rerun()
+
 # Custom CSS for chat-like interface
 st.markdown("""
 <style>
