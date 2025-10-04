@@ -103,29 +103,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Additional fallback selectors and position fix for Streamlit versions where the button uses different attributes
-st.markdown("""
-<style>
-    /* Try attribute selectors, role, data-testid and direct button containers */
-    [data-testid="collapsedSidebarToggle"] , [data-testid="stToolbar"] button, [data-testid="sidebarToggle"], button[aria-label*="sidebar" i], button[title*="Sidebar" i], button[role="button"] {
-        background: #331717 !important;
-        color: #DA1C1C !important;
-        border-radius: 999px !important;
-        width: 44px !important;
-        height: 44px !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.35) !important;
-        border: 2px solid rgba(255,255,255,0.12) !important;
-        transition: transform 0.12s ease-in-out !important;
-        position: fixed !important;
-        left: 18px !important;
-        top: 18px !important;
-        z-index: 99999 !important;
-    }
 
-</style>
-""", unsafe_allow_html=True)
 # Remove hidden reasoning from model outputs
 THINK_TAG_RE = re.compile(r"<think>[\s\S]*?</think>", re.IGNORECASE)
 
