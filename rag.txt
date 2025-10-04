@@ -1,0 +1,8 @@
+Leave Policy:
+- Annual leave: 20 days
+- Sick leave: 10 days
+- Casual leave: 5 days
+
+Attendance Policy:
+- Employees must check-in by 9 AM
+- Late check-in > 3 times = HR notice

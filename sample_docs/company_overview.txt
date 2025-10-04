@@ -1,0 +1,16 @@
+Acme Analytics – Company Overview
+
+Acme Analytics builds lightweight data tools for small teams. Our flagship
+product, InsightBoard, provides real‑time dashboards, scheduled reports, and
+AI‑assisted explanations of trends. We serve startups and SMBs in e‑commerce,
+fintech, and SaaS. Pricing starts at $49/month with a 14‑day trial.
+
+Key points:
+- Founded: 2021, headquartered in Lagos
+- Team: 22 employees across product, engineering, and success
+- Security: SOC 2 Type I, data encrypted at rest (AES‑256) and in transit (TLS 1.2+)
+- Support: Email and in‑app chat, 24‑hour first‑response SLA on Business plan
+
+Mission:
+Help small teams make better decisions with clear, fast, and explainable data.
+

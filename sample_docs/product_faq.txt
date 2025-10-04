@@ -1,0 +1,19 @@
+InsightBoard – Product FAQ
+
+Q: What data sources are supported?
+A: PostgreSQL, MySQL, BigQuery, Snowflake, CSV uploads, and Google Sheets.
+
+Q: How often do dashboards refresh?
+A: Live tiles update every 60 seconds. Scheduled reports can run hourly, daily,
+or weekly. API limits may apply for third‑party sources.
+
+Q: Does InsightBoard support user permissions?
+A: Yes. Roles include Viewer, Editor, and Admin. Folder‑level permissions and
+row‑level filters are available on the Business plan.
+
+Q: Can I export charts?
+A: Exports are available as PNG, CSV, and PDF. Email digests can be scheduled.
+
+Q: How is billing handled?
+A: Monthly or annual billing via credit card. Invoices are available in the app.
+

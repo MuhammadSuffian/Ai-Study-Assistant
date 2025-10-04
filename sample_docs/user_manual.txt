@@ -1,0 +1,26 @@
+InsightBoard – Quick Start Guide
+
+1) Connect a data source
+   - Navigate to Settings > Connections
+   - Choose PostgreSQL and enter host, port, database, user, and password
+   - Click Test Connection, then Save
+
+2) Create your first dashboard
+   - Click New > Dashboard, name it "Executive Overview"
+   - Add a "Metric" tile and select "Monthly Revenue"
+   - Choose visualization: Line chart; group by month; last 12 months
+
+3) Share with your team
+   - Open the dashboard > Share
+   - Invite teammates by email and assign Viewer or Editor access
+
+4) Schedule a weekly report
+   - Click Automations > New Schedule
+   - Select the "Executive Overview" dashboard
+   - Delivery: Friday 9:00 AM, recipients: finance@acme.co
+
+Troubleshooting
+- If charts show "No data", verify time filters and source permissions
+- Check source sync status under Settings > Connections > Activity
+- Contact support from the app footer if issues persist
+
