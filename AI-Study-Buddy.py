@@ -123,8 +123,7 @@ st.markdown("""
         top: 18px !important;
         z-index: 99999 !important;
     }
-    /* Ensure it doesn't block important UI but remains clickable */
-    body > [role="button"] { pointer-events: auto !important; }
+
 </style>
 """, unsafe_allow_html=True)
 # Remove hidden reasoning from model outputs
