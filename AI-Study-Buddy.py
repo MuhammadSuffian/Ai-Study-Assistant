@@ -119,7 +119,7 @@ st.markdown("""
         border: 2px solid rgba(255,255,255,0.12) !important;
         transition: transform 0.12s ease-in-out !important;
         position: fixed !important;
-        right: 18px !important;
+        left: 18px !important;
         top: 18px !important;
         z-index: 99999 !important;
     }
@@ -375,7 +375,7 @@ st.markdown("""
     #floating-sidebar-toggle {
         position: fixed;
         top: 16px;
-        right: 16px;
+        left: 16px;
         width: 48px;
         height: 48px;
         background: #000000;
