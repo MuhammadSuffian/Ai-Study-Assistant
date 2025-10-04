@@ -369,6 +369,69 @@ st.markdown('<div class="app-header">', unsafe_allow_html=True)
 st.title("AI STUDY BUDDY")
 st.markdown('</div>', unsafe_allow_html=True)
 
+# Floating fallback sidebar toggle button (always visible)
+st.markdown("""
+<style>
+    #floating-sidebar-toggle {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        width: 48px;
+        height: 48px;
+        background: #000000;
+        color: #fff;
+        border-radius: 999px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 100000;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        cursor: pointer;
+    }
+    #floating-sidebar-toggle svg { width: 20px; height: 20px; fill: #fff; }
+</style>
+<div id="floating-sidebar-toggle" title="Toggle sidebar" role="button" tabindex="0" aria-label="Toggle sidebar">
+    <!-- simple hamburger icon -->
+    <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><path d="M3 6h18v2H3zM3 11h18v2H3zM3 16h18v2H3z"/></svg>
+</div>
+<script>
+    (function(){
+        const btn = document.getElementById('floating-sidebar-toggle');
+        function tryToggle(){
+            // common sidebar toggle candidates
+            const selectors = [
+                '[data-testid="collapsedSidebarToggle"]',
+                '[data-testid="sidebarToggle"]',
+                'button[aria-label*="sidebar" i]',
+                'button[title*="Sidebar" i]',
+                'button[title="Expand"]',
+                'button[title="Collapse"]'
+            ];
+            for(const sel of selectors){
+                const el = document.querySelector(sel);
+                if(el){ el.click(); return; }
+            }
+            // fallback: toggle the 'collapsed' attribute on the main sidebar element
+            const sidebar = document.querySelector('[data-testid="stSidebar"]') || document.querySelector('.css-1d391kg');
+            if(sidebar){
+                // If Streamlit uses a class to hide, toggle a style to show/hide
+                if(sidebar.style.display === 'none'){
+                    sidebar.style.display = '';
+                } else {
+                    sidebar.style.display = 'none';
+                }
+                return;
+            }
+            // last resort: dispatch a keyboard event to open settings (some versions respond to Alt+S)
+            const evt = new KeyboardEvent('keydown', {key: 's', altKey:true});
+            document.dispatchEvent(evt);
+        }
+        btn.addEventListener('click', tryToggle);
+        btn.addEventListener('keydown', function(e){ if(e.key === 'Enter' || e.key === ' ') { e.preventDefault(); tryToggle(); } });
+    })();
+</script>
+""", unsafe_allow_html=True)
+
 # App state
 if "vectorstore" not in st.session_state:
     st.session_state["vectorstore"] = None
