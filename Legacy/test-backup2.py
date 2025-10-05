@@ -11,7 +11,7 @@ import re
 
 # Initialize Groq client with environment variable
 import os
-groq_client = Groq(api_key="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")
+groq_client = Groq(api_key="API KEY HERE")
 
 st.set_page_config(
     page_title="AI STUDY BUDDY",
@@ -34,95 +34,32 @@ def hide_thinking(text: str) -> str:
 # Custom CSS for chat-like interface
 st.markdown("""
 <style>
-    /* Main app styling - Full height layout */
+    /* Main app styling */
     .main .block-container {
-        padding: 0rem;
-        max-width: 100%;
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-    }
-    
-    /* Remove default streamlit spacing */
-    .element-container {
-        margin-bottom: 0rem !important;
-    }
-    
-    /* App header */
-    .app-header {
-        background: #ffffff;
-        padding: 1rem;
-        border-bottom: 1px solid #e0e0e0;
-        flex-shrink: 0;
-        text-align: center;
-    }
-    
-    /* Title styling */
-    h1 {
-        margin: 0 !important;
-        padding: 0 !important;
-        font-size: 1.5rem;
-        color: #333;
-    }
-    
-    /* Hide only the main content subtitle, not sidebar titles */
-    .main h3 {
-        margin: 0 !important;
-        padding: 0 !important;
-        display: none; /* Hide the subtitle in main content */
-    }
-    
-    /* Keep sidebar titles visible */
-    .sidebar h3 {
-        margin: 0.5rem 0 !important;
-        padding: 0 !important;
-        display: block !important;
-    }
-    
-    /* Main chat area */
-    .chat-main {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
+        padding-top: 2rem;
+        padding-bottom: 8rem;
+        max-width: 800px;
     }
     
     /* Chat container */
     .chat-container {
         background: #ffffff;
+        border-radius: 12px;
         padding: 1rem;
-        flex: 1;
+        margin: 1rem 0;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+        min-height: 400px;
+        max-height: 500px;
         overflow-y: auto;
-        overflow-x: hidden;
-        scroll-behavior: smooth;
-    }
-    
-    /* Scroll to bottom automatically */
-    .chat-container::-webkit-scrollbar {
-        width: 6px;
-    }
-    
-    .chat-container::-webkit-scrollbar-track {
-        background: #f1f1f1;
-        border-radius: 10px;
-    }
-    
-    .chat-container::-webkit-scrollbar-thumb {
-        background: #888;
-        border-radius: 10px;
-    }
-    
-    .chat-container::-webkit-scrollbar-thumb:hover {
-        background: #555;
     }
     
     /* User message bubble */
     .user-message {
         background: #e3f2fd;
         color: #1976d2;
-        padding: 8px 12px;
+        padding: 12px 16px;
         border-radius: 18px 18px 4px 18px;
-        margin: 4px 0 4px auto;
+        margin: 8px 0 8px auto;
         max-width: 70%;
         width: fit-content;
         margin-left: auto;
@@ -134,9 +71,9 @@ st.markdown("""
     .ai-message {
         background: #f5f5f5;
         color: #333333;
-        padding: 8px 12px;
+        padding: 12px 16px;
         border-radius: 18px 18px 18px 4px;
-        margin: 4px auto 4px 0;
+        margin: 8px auto 8px 0;
         max-width: 70%;
         width: fit-content;
         margin-right: auto;
@@ -144,23 +81,16 @@ st.markdown("""
     }
     
     /* Fixed bottom input */
-    .chat-input-container {
+    .fixed-bottom-input {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
         background: white;
         padding: 1rem;
         border-top: 1px solid #e0e0e0;
-        flex-shrink: 0;
-    }
-    
-    .fixed-bottom-input {
-        position: relative;
-        bottom: auto;
-        left: auto;
-        right: auto;
-        background: transparent;
-        padding: 0;
-        border-top: none;
-        box-shadow: none;
-        z-index: auto;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        z-index: 999;
     }
     
     /* Input field styling */
@@ -168,11 +98,11 @@ st.markdown("""
         background: #f8f9fa;
         border: 2px solid #e0e0e0;
         border-radius: 25px;
-        padding: 8px 16px;
-        font-size: 14px;
+        padding: 12px 20px;
+        font-size: 16px;
         color: #333;
         transition: all 0.3s ease;
-        height: 40px;
+        height: 48px;
     }
     
     .stTextInput > div > div > input:focus {
@@ -186,13 +116,13 @@ st.markdown("""
         background: #1976d2;
         color: white;
         border: none;
-        padding: 8px 20px;
+        padding: 12px 24px;
         border-radius: 25px;
-        font-size: 14px;
+        font-size: 16px;
         font-weight: 500;
         cursor: pointer;
         transition: all 0.3s ease;
-        height: 40px;
+        height: 48px;
         width: 100%;
     }
     
@@ -228,7 +158,7 @@ st.markdown("""
         font-style: italic;
     }
     
-    /* Hide streamlit elements and prevent page scroll */
+    /* Hide streamlit elements */
     .stDeployButton {
         display: none;
     }
@@ -240,24 +170,11 @@ st.markdown("""
     .stApp > header {
         display: none;
     }
-    
-    /* Prevent main page scrolling */
-    .main {
-        overflow: hidden;
-        height: 100vh;
-    }
-    
-    .stApp {
-        overflow: hidden;
-        height: 100vh;
-    }
 </style>
 """, unsafe_allow_html=True)
 
-# Streamlit UI - Header
-st.markdown('<div class="app-header">', unsafe_allow_html=True)
+# Streamlit UI
 st.title("AI STUDY BUDDY")
-st.markdown('</div>', unsafe_allow_html=True)
 
 # App state
 if "vectorstore" not in st.session_state:
@@ -274,8 +191,8 @@ if "chat_history" not in st.session_state:
 # Query UI (enabled once an index exists)
 vectorstore_ready = st.session_state.get("vectorstore") is not None
 
-# Main chat area
-st.markdown('<div class="chat-main">', unsafe_allow_html=True)
+# Chat Interface
+st.markdown("### 💬 AI Study Assistant")
 
 # Chat container
 with st.container():
@@ -294,20 +211,7 @@ with st.container():
     
     st.markdown('</div>', unsafe_allow_html=True)
 
-# Auto-scroll to bottom script
-st.markdown("""
-<script>
-    setTimeout(function() {
-        var chatContainer = parent.document.querySelector('.chat-container');
-        if (chatContainer) {
-            chatContainer.scrollTop = chatContainer.scrollHeight;
-        }
-    }, 100);
-</script>
-""", unsafe_allow_html=True)
-
-# Input area
-st.markdown('<div class="chat-input-container">', unsafe_allow_html=True)
+# Fixed bottom input area
 st.markdown('<div class="fixed-bottom-input">', unsafe_allow_html=True)
 col1, col2 = st.columns([5, 1], gap="small")
 
@@ -324,10 +228,6 @@ with col1:
 with col2:
     send_clicked = st.button("Send", disabled=not vectorstore_ready or not query.strip(), key="send_chat")
 
-st.markdown('</div>', unsafe_allow_html=True)
-st.markdown('</div>', unsafe_allow_html=True)
-
-# Close main chat area
 st.markdown('</div>', unsafe_allow_html=True)
 
 # Process query when send button is clicked or Enter is pressed
@@ -371,7 +271,7 @@ if send_clicked and query.strip() and vectorstore_ready:
 with st.sidebar:
     # Document Upload Section
     st.markdown("### 📁 **Upload Documents**")
-    # st.markdown('<div class="upload-section">', unsafe_allow_html=True)
+    st.markdown('<div class="upload-section">', unsafe_allow_html=True)
     uploaded_files = st.file_uploader("Upload documents", type=["txt", "pdf"], accept_multiple_files=True, label_visibility="collapsed")
     st.markdown('</div>', unsafe_allow_html=True)
     

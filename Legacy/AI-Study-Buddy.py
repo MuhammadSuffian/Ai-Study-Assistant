@@ -8,15 +8,205 @@ from groq import Groq
 import PyPDF2
 import io
 import re
+import os
+
+# Configure page settings
+st.set_page_config(
+    page_title="AI STUDY BUDDY",
+    page_icon="🤖",
+    initial_sidebar_state=st.session_state.get('sidebar_state', 'collapsed'),
+    layout="wide"
+)
+
+# Add a native Streamlit sidebar toggle button
+if 'sidebar_state' not in st.session_state:
+    st.session_state.sidebar_state = 'collapsed'
+
+# Add custom sidebar toggle button at the beginning of your app
+st.markdown("""
+<style>
+    /* Custom sidebar toggle button */
+    #custom-sidebar-button {
+        position: fixed;
+        top: 0.5rem;
+        left: 0.5rem;
+        z-index: 99999;
+        background: #FF4B4B;
+        color: white;
+        border: none;
+        width: 80px;
+        height: 35px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+        transition: all 0.2s ease;
+        font-family: sans-serif;
+        font-weight: bold;
+        font-size: 14px;
+        text-transform: uppercase;
+        border-radius: 4px;
+    }
+    #custom-sidebar-button:hover {
+        transform: translateY(-2px);
+        background: #FF3333;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    #custom-sidebar-button:active {
+        transform: translateY(0px);
+    }
+</style>
+
+<div id="custom-sidebar-button" onclick="toggleSidebar()">
+    Expand
+</div>
+
+<script>
+    function toggleSidebar() {
+        // Try multiple selectors to find the sidebar toggle button
+        const sidebarToggle = 
+            document.querySelector('button[data-testid="baseButton-headerNoPadding"]') ||
+            document.querySelector('button[kind="header"]') ||
+            document.querySelector('button[aria-label="Close sidebar"]') ||
+            document.querySelector('button[aria-label="Open sidebar"]');
+            
+        if (sidebarToggle) {
+            sidebarToggle.click();
+            
+            // Update button text based on sidebar state
+            const button = document.getElementById('custom-sidebar-button');
+            if (button) {
+                // Use a small delay to ensure the sidebar state has changed
+                setTimeout(() => {
+                    const isOpen = document.querySelector('.stSidebar').classList.contains('css-1p47ik9');
+                    button.textContent = isOpen ? 'Close' : 'Expand';
+                }, 100);
+            }
+        }
+    }
+    
+    // Initialize button and ensure it's properly added to the DOM
+    function initSidebarButton() {
+        if (!document.getElementById('custom-sidebar-button')) {
+            const button = document.createElement('div');
+            button.innerHTML = document.querySelector('#custom-sidebar-button').outerHTML;
+            document.body.appendChild(button.firstChild);
+        }
+    }
+    
+    // Call initialization when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSidebarButton);
+    } else {
+        initSidebarButton();
+    }
+    
+    // Reinitialize on Streamlit's page update
+    new MutationObserver(function(mutations) {
+        const button = document.getElementById('custom-sidebar-button');
+        if (!button) {
+            initSidebarButton();
+        }
+    }).observe(document.body, {childList: true, subtree: true});
+</script>
+""", unsafe_allow_html=True)
 
 # Initialize Groq client with environment variable
-import os
-groq_client = Groq(api_key="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")
+
+# Load Groq API key securely from Streamlit secrets or environment variable.
+# Preferred: st.secrets['auth_token'] (set via `streamlit secrets`), fallback to GROQ_API_KEY env var.
+groq_api_key = None
+try:
+    groq_api_key = st.secrets.get("auth_token") if hasattr(st, "secrets") else None
+except Exception:
+    groq_api_key = None
+
+if not groq_api_key:
+    groq_api_key = os.environ.get("GROQ_API_KEY")
+
+if not groq_api_key:
+    st.error("Groq API key not found. Please set `st.secrets['auth_token']` or the GROQ_API_KEY environment variable.")
+    st.stop()
+
+groq_client = Groq(api_key=groq_api_key)
 
 st.set_page_config(
     page_title="AI STUDY BUDDY",
     page_icon="🤖",
+    initial_sidebar_state="expanded"  # "expanded" keeps it open
 )
+# Force light theme visuals (overrides Streamlit dark theme selectors).
+st.markdown("""
+<style>
+    /* Make backgrounds and text use light-theme colors */
+    html, body, .stApp, .main, .block-container, .css-1outpf7, .css-1d391kg, .stSidebar {
+        background-color: #FFFFFF !important;
+        color: #31333F !important;
+    }
+    /* Inputs and buttons */
+    .stTextInput>div>div>input, .stButton>button, textarea {
+        background-color: #f8f9fa !important;
+        color: #31333F !important;
+        border-color: #e0e0e0 !important;
+    }
+    /* Sidebar and containers */
+    .css-1d391kg, .css-1v3fvcr, .stSidebar, .stApp, .main {
+        background-color: #FFFFFF !important;
+        color: #31333F !important;
+    }
+    /* Ensure message bubbles stay light */
+    .user-message, .ai-message, .chat-container, .chat-input-container {
+        background-color: inherit !important;
+        color: inherit !important;
+    }
+    /* Hide Streamlit header/settings that might allow theme changes */
+    .stApp > header, [data-testid="stToolbar"] { display: none !important; }
+</style>
+<script>
+    // Encourage Streamlit to keep the global theme as light in localStorage (best-effort)
+    try {
+        if (window && window.localStorage) {
+            var current = window.localStorage.getItem('globalTheme');
+            try {
+                window.localStorage.setItem('globalTheme', JSON.stringify({base:'light'}));
+            } catch(e) {}
+        }
+    } catch(e) {}
+</script>
+""", unsafe_allow_html=True)
+
+# Make sidebar expand/collapse button more visible (black circle with white icon)
+# Note: keep this at top-level so it's not indented inside another block
+st.markdown("""
+<style>
+    /* Target the floating sidebar toggle - Streamlit renders it with role=button and title attribute */
+    button[title="Expand"] , button[title="Collapse"], button[aria-label="Expand Sidebar"], button[aria-label="Collapse Sidebar"] {
+        background: #000000 !important;
+        color: #ffffff !important;
+        border-radius: 999px !important;
+        width: 40px !important;
+        height: 40px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.25) !important;
+        border: 2px solid rgba(255,255,255,0.08) !important;
+        transition: transform 0.12s ease-in-out !important;
+    }
+    button[title="Expand"]:hover, button[title="Collapse"]:hover, button[aria-label="Expand Sidebar"]:hover, button[aria-label="Collapse Sidebar"]:hover {
+        transform: translateY(-2px) !important;
+    }
+    /* Ensure the chevron/icon inside stays white */
+    button[title="Expand"] svg, button[title="Collapse"] svg, button[aria-label="Expand Sidebar"] svg, button[aria-label="Collapse Sidebar"] svg {
+        fill: #ffffff !important;
+        color: #ffffff !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Additional fallback selectors and position fix for Streamlit versions where the button uses different attributes
+
 # Remove hidden reasoning from model outputs
 THINK_TAG_RE = re.compile(r"<think>[\s\S]*?</think>", re.IGNORECASE)
 
@@ -450,3 +640,116 @@ with st.sidebar:
     3. **Ask** questions using the query box
     4. **Click** the 🚀 Send button or press Enter
     """)
+
+# Add custom sidebar toggle button at the beginning of your app
+st.markdown("""
+<style>
+    /* Custom sidebar toggle button */
+    #custom-sidebar-button {
+        position: fixed;
+        top: 0.5rem;
+        left: 0.5rem;
+        z-index: 99999;
+        background: #FF4B4B;
+        color: white;
+        border: none;
+        width: 80px;
+        height: 35px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.2);
+        transition: all 0.2s ease;
+        font-family: sans-serif;
+        font-weight: bold;
+        font-size: 14px;
+        text-transform: uppercase;
+        border-radius: 4px;
+    }
+    #custom-sidebar-button:hover {
+        transform: translateY(-2px);
+        background: #FF3333;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    #custom-sidebar-button:active {
+        transform: translateY(0px);
+    }
+</style>
+
+<div id="custom-sidebar-button" onclick="toggleSidebar()">
+    Expand
+</div>
+
+<script>
+    function toggleSidebar() {
+        // Try multiple selectors to find the sidebar toggle button
+        const sidebarToggle = 
+            document.querySelector('button[data-testid="baseButton-headerNoPadding"]') ||
+            document.querySelector('button[kind="header"]') ||
+            document.querySelector('button[aria-label="Close sidebar"]') ||
+            document.querySelector('button[aria-label="Open sidebar"]');
+            
+        if (sidebarToggle) {
+            sidebarToggle.click();
+            
+            // Update button text based on sidebar state
+            const button = document.getElementById('custom-sidebar-button');
+            if (button) {
+                // Use a small delay to ensure the sidebar state has changed
+                setTimeout(() => {
+                    const isOpen = document.querySelector('.stSidebar').classList.contains('css-1p47ik9');
+                    button.textContent = isOpen ? 'Close' : 'Expand';
+                }, 100);
+            }
+        }
+    }
+    
+    // Initialize button and ensure it's properly added to the DOM
+    function initSidebarButton() {
+        if (!document.getElementById('custom-sidebar-button')) {
+            const button = document.createElement('div');
+            button.innerHTML = document.querySelector('#custom-sidebar-button').outerHTML;
+            document.body.appendChild(button.firstChild);
+        }
+    }
+    
+    // Call initialization when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initSidebarButton);
+    } else {
+        initSidebarButton();
+    }
+    
+    // Reinitialize on Streamlit's page update
+    new MutationObserver(function(mutations) {
+        const button = document.getElementById('custom-sidebar-button');
+        if (!button) {
+            initSidebarButton();
+        }
+    }).observe(document.body, {childList: true, subtree: true});
+</script>
+""", unsafe_allow_html=True)
+
+# Add button with JavaScript to toggle sidebar
+st.markdown("""
+<button class="custom-sidebar-button" onclick="toggleSidebar()">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M3 12h18M3 6h18M3 18h18"></path>
+    </svg>
+</button>
+
+<script>
+    function toggleSidebar() {
+        const sidebarToggle = document.querySelector('button[data-testid="baseButton-headerNoPadding"]');
+        if (sidebarToggle) {
+            sidebarToggle.click();
+        }
+    }
+</script>
+""", unsafe_allow_html=True)
+
+# Continue with the rest of your app...
+st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)
+st.markdown('</div>', unsafe_allow_html=True)

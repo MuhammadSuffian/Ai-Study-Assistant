@@ -11,7 +11,7 @@ import re
 
 # Initialize Groq client with environment variable
 import os
-groq_client = Groq(api_key="API KEY HERE")
+groq_client = Groq(api_key="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")
 
 st.set_page_config(
     page_title="AI STUDY BUDDY",

@@ -5,3 +5,4 @@ groq
 PyPDF2
 sentence-transformers
 torch
+langchain-community
