@@ -1,30 +1,42 @@
 import streamlit as st
-from langchain.embeddings import HuggingFaceEmbeddings
-from langchain.vectorstores import FAISS
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.docstore.document import Document
-from langchain.prompts import PromptTemplate
-from groq import Groq
 import PyPDF2
 import io
 import re
-
-# Initialize Groq client with environment variable
 import os
-groq_api_key = None
-try:
-    groq_api_key = st.secrets.get("auth_token") if hasattr(st, "secrets") else None
-except Exception:
+
+# NOTE: We avoid importing heavy SDKs (langchain, groq, faiss, transformers, etc.)
+# at module import time to prevent Streamlit startup hangs. They are imported
+# lazily inside the handlers that need them.
+
+def get_groq_client():
+    """Lazily initialize and cache a Groq client. Returns None if API key missing
+    or the client failed to initialize. Stores errors in session_state.
+    """
+    if st.session_state.get("groq_client"):
+        return st.session_state["groq_client"]
+
     groq_api_key = None
+    try:
+        groq_api_key = st.secrets.get("auth_token") if hasattr(st, "secrets") else None
+    except Exception:
+        groq_api_key = None
 
-if not groq_api_key:
-    groq_api_key = os.environ.get("GROQ_API_KEY")
+    if not groq_api_key:
+        groq_api_key = os.environ.get("GROQ_API_KEY")
 
-if not groq_api_key:
-    st.error("Groq API key not found. Please set `st.secrets['auth_token']` or the GROQ_API_KEY environment variable.")
-    st.stop()
+    if not groq_api_key:
+        st.session_state["groq_client_error"] = "Groq API key not configured (st.secrets['auth_token'] or GROQ_API_KEY)."
+        return None
 
-groq_client = Groq(api_key=groq_api_key)
+    try:
+        from groq import Groq
+
+        client = Groq(api_key=groq_api_key)
+        st.session_state["groq_client"] = client
+        return client
+    except Exception as e:
+        st.session_state["groq_client_error"] = str(e)
+        return None
 
 
 st.set_page_config(
@@ -351,6 +363,7 @@ if send_clicked and query.strip() and vectorstore_ready:
     
     with st.spinner("Thinking..."):
         try:
+            # Use the vectorstore (FAISS created earlier). We imported/created it lazily
             retrieved_docs = st.session_state["vectorstore"].similarity_search(query, k=3)
             if not retrieved_docs:
                 answer = "I couldn't find relevant information in the uploaded documents. Please try rephrasing your question."
@@ -361,14 +374,29 @@ if send_clicked and query.strip() and vectorstore_ready:
                 Context: {context}
                 Question: {query}
                 """
+                # Get (or create) the groq client lazily
+                groq_client = get_groq_client()
+                if not groq_client:
+                    err = st.session_state.get("groq_client_error", "Groq client not available.")
+                    answer = f"Model request failed: {err}"
+                else:
+                    try:
+                        response = groq_client.chat.completions.create(
+                            model="openai/gpt-oss-120b",
+                            messages=[{"role": "user", "content": prompt}]
+                        )
 
-                response = groq_client.chat.completions.create(
-                    model="openai/gpt-oss-120b",
-                    messages=[{"role": "user", "content": prompt}]
-                )
+                        # Attempt to extract content safely
+                        answer = ""
+                        try:
+                            answer = response.choices[0].message.content
+                        except Exception:
+                            # Fallback to string conversion
+                            answer = str(response)
 
-                answer = response.choices[0].message.content
-                answer = hide_thinking(answer)
+                        answer = hide_thinking(answer)
+                    except Exception as e:
+                        answer = f"Model call failed: {e}"
             
             # Add AI response to chat history
             st.session_state.chat_history.append({"role": "assistant", "content": answer})
@@ -394,6 +422,16 @@ with st.sidebar:
         if st.button("Process documents"):
             with st.spinner("Processing and indexing documents..."):
                 try:
+                    # Lazy-import langchain/embeddings/vectorstore to avoid heavy imports at startup
+                    try:
+                        from langchain.embeddings import HuggingFaceEmbeddings
+                        from langchain.vectorstores import FAISS
+                        from langchain.text_splitter import RecursiveCharacterTextSplitter
+                        from langchain.docstore.document import Document
+                    except Exception as imp_err:
+                        st.error(f"Required packages for indexing are not available: {imp_err}")
+                        raise
+
                     docs = []
                     for file in uploaded_files:
                         if file.type == "text/plain":
