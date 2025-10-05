@@ -11,7 +11,21 @@ import re
 
 # Initialize Groq client with environment variable
 import os
-groq_client = Groq(api_key="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")
+groq_api_key = None
+try:
+    groq_api_key = st.secrets.get("auth_token") if hasattr(st, "secrets") else None
+except Exception:
+    groq_api_key = None
+
+if not groq_api_key:
+    groq_api_key = os.environ.get("GROQ_API_KEY")
+
+if not groq_api_key:
+    st.error("Groq API key not found. Please set `st.secrets['auth_token']` or the GROQ_API_KEY environment variable.")
+    st.stop()
+
+groq_client = Groq(api_key=groq_api_key)
+
 
 st.set_page_config(
     page_title="AI STUDY BUDDY",
