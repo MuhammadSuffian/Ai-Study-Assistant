@@ -34,4 +34,3 @@ streamlit run test.py
 
 ## Security Note
 
-⚠️ **Important**: Never commit your API keys to version control. Use environment variables instead.
