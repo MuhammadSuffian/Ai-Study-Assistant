@@ -18,7 +18,7 @@ set GROQ_API_KEY=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
 export GROQ_API_KEY=your_groq_api_key_here
 ```
 
-**Important**: Replace `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` with your actual Groq API key from https://console.groq.com/
+**Important**:  Add your actual Groq API key from https://console.groq.com/
 
 3. Run the application:
 ```bash
