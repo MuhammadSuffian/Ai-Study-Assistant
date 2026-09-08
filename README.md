@@ -32,5 +32,4 @@ streamlit run test.py
 - Fast inference with Groq API
 - Interactive web interface
 
-## Security Note
 
